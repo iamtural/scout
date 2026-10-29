@@ -28,9 +28,18 @@ class ListingCostTest(unittest.TestCase):
         self.assertEqual(out["pushed_out_estimate"], [])
 
     def test_names_skills_past_budget(self):
-        out = listing_cost.listing_cost(self.cand, self.installed, 200)
+        # alpha 109 + beta 108 = 217 fits 220; adding newbie (60) pushes beta out.
+        out = listing_cost.listing_cost(self.cand, self.installed, 220)
         self.assertTrue(out["over_budget"])
+        self.assertFalse(out["already_over_budget"])
         self.assertEqual(out["pushed_out_estimate"], ["beta"])
+
+    def test_does_not_blame_candidate_for_existing_overflow(self):
+        # 217 is already past 200, so beta was out before the candidate.
+        out = listing_cost.listing_cost(self.cand, self.installed, 200)
+        self.assertTrue(out["already_over_budget"])
+        self.assertEqual(out["already_past_budget_count"], 1)
+        self.assertEqual(out["pushed_out_estimate"], [])
 
     def test_frontmatter_forms(self):
         path = os.path.join(self.tmp.name, "f", "SKILL.md")

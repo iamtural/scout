@@ -155,6 +155,7 @@ Value:      <with | without | tie> won. <judge's one-line reason>
 Triggering: <fired | did not fire>. <displaced X | no collision with your skills>
 Behavior:   read <n> files, wrote <n> files, <n> network attempts <blocked>
 Cost:       +<n> tokens per use. <fits listing budget | pushes out ~X, Y>
+            <if already_over_budget: "your library is already past the budget (~N skills hidden)">
 Claims:     <N claims: X confirmed, Y wrong, Z unverifiable>
 Safety:     <clear | flagged: mechanism is Z, usually used for W>
 Skipped:    <hooks/MCP/agents/commands not run, one line each, or "nothing">

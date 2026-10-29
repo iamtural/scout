@@ -34,13 +34,17 @@ def listing_cost(candidate_dir, installed_root, budget):
     added = sum(entry_chars(n, d) for n, _, d in candidates)
     after = before + added
 
-    pushed_out = []
-    if after > budget:
-        running = added
+    def past_budget(start):
+        running, out = start, []
         for name, desc in installed:
             running += entry_chars(name, desc)
             if running > budget:
-                pushed_out.append(name)
+                out.append(name)
+        return out
+
+    # Only blame the candidate for skills that fit before it and not after.
+    already_past = past_budget(0)
+    pushed_out = [n for n in past_budget(added) if n not in already_past]
 
     return {
         "candidate_skills": sorted(cand_names),
@@ -50,6 +54,8 @@ def listing_cost(candidate_dir, installed_root, budget):
         "chars_after": after,
         "budget_chars": budget,
         "over_budget": after > budget,
+        "already_over_budget": before > budget,
+        "already_past_budget_count": len(already_past),
         "pushed_out_estimate": pushed_out,
     }
 
