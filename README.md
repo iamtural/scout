@@ -1,50 +1,96 @@
 # Scout
 
-**Verify an AI agent skill before you install it.**
+**Try an AI agent skill on your own work before you install it.**
 
-The skill marketplace exploded in 2026. Every week brings a new repo with a slick README and a stats-heavy post. Most are fine. Some quietly duplicate a skill you already have. Some make claims in the pitch that are just wrong. A few are built for something you would not want to run once you look past the pitch.
-
-Scout does the check in one pass so the decision takes seconds, not twenty minutes.
+Install counts and stars tell you a skill is popular. They don't tell you it
+helps with what you actually do. Most skill pages are a pitch. Scout gets you
+proof.
 
 ```
 scout https://github.com/someone/some-skill
 ```
 
-It does three things:
-
-1. **Fact-checks the pitch.** Every checkable claim (pricing, config syntax, benchmark numbers) is checked against the primary source and marked confirmed, wrong, or unverifiable.
-2. **Checks overlap.** It compares the candidate against the skills you already have installed, since descriptions drive triggering.
-3. **Screens the mechanism.** It flags tools whose core purpose is detection evasion, ToS-circumventing automation or fake engagement. These are flagged plainly, without assuming bad intent.
+Scout takes a real request from your own Claude Code history, runs it once
+with the skill and once without in a sandbox, and has a blind judge compare
+the results. You see both and can overrule the judge. Then you get one card
+(an example):
 
 ```
-SCOUT — some-skill
-Source: https://github.com/someone/some-skill
+SCOUT: release-notes   (github.com/someone/release-notes @ 3f2a91c)
 
-VERDICT: INSTALL WITH CAUTION
+VERDICT: INSTALL
 
-Claims checked: 3
-  ✓ CONFIRMED — "40% cheaper per token" (source: platform.claude.com/docs/pricing)
-  ✗ WRONG — config field is `effort` → actually `effortLevel` (source: code.claude.com/docs/settings)
-  ? UNVERIFIABLE — "63% vs 69% on agentic coding" (no benchmark cited)
+Task: draft release notes for v2.3 from the changelog   [from your history]
+Value:      with won. Grouped changes by user impact; without listed commits.
+Triggering: fired. No collision with your skills.
+Behavior:   read 4 files, wrote 1 file, 0 network attempts
+Cost:       +1,850 tokens per use. Fits your listing budget.
+Claims:     3 claims: 2 confirmed, 1 unverifiable
+Safety:     clear
+Skipped:    nothing
 
-Overlap: partial overlap with your installed `ce-debug`
-Safety: clear
-
-Bottom line: real tool, sloppy pitch. The config example would silently
-no-op if copy-pasted. Worth installing — don't trust the exact JSON block.
+Based on one run.
 ```
 
-The verdict is always private to you. Scout never posts publicly about a skill or its author.
+If nothing in your history matches, Scout says so: *you've never asked for
+this, so it would be new capability, not an upgrade.* Then it drafts a task
+and labels it drafted.
+
+## What it checks
+
+| Line | How |
+|---|---|
+| **Value** | Your task, run with and without the skill. A blind judge picks the better result. |
+| **Triggering** | Whether the skill actually fired, and whether it pushed aside a skill you already have. |
+| **Behavior** | Files read and written, and network attempts, during the run. |
+| **Cost** | Extra tokens per use, and whether its description pushes others out of the skill listing budget. |
+| **Claims** | The pitch's checkable claims, checked against primary sources. |
+| **Safety** | Flags tools built for detection evasion, ToS-abusive automation or fake engagement. |
+
+## Safety and privacy
+
+- **Hooks and MCP servers never run.** They run outside the sandbox with your
+  full access, so Scout lists them instead. A skill whose value depends on
+  them gets a static read labelled "not trial-tested".
+- **Each trial run is locked down:** headless Claude Code with
+  `--restricted`, the sandbox on, no MCP servers, no saved session, in a
+  throwaway folder that's deleted afterward. The candidate never touches your
+  real skill library.
+- **Your history stays on your machine.** It's searched locally. Only the one
+  task you pick goes into the trial.
+- **Receipts are private.** Each trial writes a small record to
+  `~/.scout/receipts/`: skill, commit, model, task category, winner and token
+  cost. There's no task text, and it's never sent anywhere.
+- **The verdict is private.** Scout never posts about a skill or its author.
+
+## Requirements
+
+- macOS or Linux (the sandbox isn't available on native Windows; there Scout
+  gives the static read)
+- Claude Code CLI, signed in for headless use (`claude auth login`)
+- `python3` (no packages needed)
 
 ## Install
-
-**Claude Code / any [Agent Skills](https://agentskills.io) host:**
 
 ```
 npx skills add iamtural/scout -g
 ```
 
-**Manual:** copy `skills/scout/` into your harness's skills directory (for example `~/.claude/skills/`).
+**Manual:** copy `skills/scout/` into your skills directory (for example
+`~/.claude/skills/`).
+
+Scout also loads in Codex and other [Agent Skills](https://agentskills.io)
+hosts. The claim, overlap and safety checks work there today; trial runs use
+Claude Code for now.
+
+## Development
+
+```
+python3 -m unittest discover tests
+```
+
+Tests use a fake `claude` (`tests/fake_claude.py`) and synthetic history, so
+they run offline with no model calls.
 
 ## License
 
