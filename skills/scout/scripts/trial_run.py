@@ -245,7 +245,8 @@ def parse_stream(text):
         if not isinstance(event, dict):
             continue
         kind = event.get("type")
-        content = (event.get("message") or {}).get("content")
+        message = event.get("message")
+        content = message.get("content") if isinstance(message, dict) else None
         if kind == "system" and event.get("subtype") == "init":
             out["model"] = event.get("model")
         elif kind == "assistant" and isinstance(content, list):
